@@ -21,6 +21,8 @@ const SCENARIO_KEYS = [
 
 export function CreationTab({ bundle, onError }: Props) {
   const t = useTranslations("studio.creation");
+  const tStatus = useTranslations("studio.shell.status");
+  const tTypes = useTranslations("studio.shell.taskTypes");
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [sellingPoints, setSellingPoints] = useState("");
@@ -58,6 +60,11 @@ export function CreationTab({ bundle, onError }: Props) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(payload.error || `Submit failed (${response.status})`);
       }
+      fetch("/api/studio/tasks/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 1 }),
+      }).catch(() => {});
       await bundle.refresh();
     } catch (submitError) {
       onError(submitError instanceof Error ? submitError.message : "Submit failed");
@@ -158,8 +165,8 @@ export function CreationTab({ bundle, onError }: Props) {
                 <li key={task.id} className="rounded-xl border border-border/60 bg-card/40 p-3 text-xs">
                   <div className="flex items-center justify-between text-card-foreground">
                     <span className="font-mono text-muted-foreground">{task.id.slice(0, 8)}</span>
-                    <span>{task.taskType}</span>
-                    <span>{task.status}</span>
+                    <span>{tTypes(task.taskType)}</span>
+                    <span>{tStatus(task.status)}</span>
                   </div>
                   {assets.length > 0 && (
                     <div className="mt-2 grid grid-cols-4 gap-2">

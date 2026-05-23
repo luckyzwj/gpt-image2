@@ -21,6 +21,8 @@ const STYLE_KEYS = [
 
 export function ArticleTab({ bundle, onError }: Props) {
   const t = useTranslations("studio.article");
+  const tStatus = useTranslations("studio.shell.status");
+  const tTypes = useTranslations("studio.shell.taskTypes");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [style, setStyle] = useState("editorial");
@@ -53,6 +55,11 @@ export function ArticleTab({ bundle, onError }: Props) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(payload.error || `Submit failed (${response.status})`);
       }
+      fetch("/api/studio/tasks/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 1 }),
+      }).catch(() => {});
       await bundle.refresh();
     } catch (submitError) {
       onError(submitError instanceof Error ? submitError.message : "Submit failed");
@@ -147,8 +154,8 @@ export function ArticleTab({ bundle, onError }: Props) {
                 <li key={task.id} className="rounded-xl border border-border/60 bg-card/40 p-3 text-xs">
                   <div className="flex items-center justify-between text-card-foreground">
                     <span className="font-mono text-muted-foreground">{task.id.slice(0, 8)}</span>
-                    <span>{task.taskType}</span>
-                    <span>{task.status}</span>
+                    <span>{tTypes(task.taskType)}</span>
+                    <span>{tStatus(task.status)}</span>
                   </div>
                   {result?.prompts && Array.isArray(result.prompts) && (
                     <ol className="mt-2 list-decimal pl-4 text-[11px] text-muted-foreground space-y-1">

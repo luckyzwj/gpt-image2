@@ -36,6 +36,11 @@ export function SingleImageTab({ bundle, onError }: Props) {
         throw new Error(payload.error || `Submit failed (${response.status})`);
       }
       setPrompt("");
+      fetch("/api/studio/tasks/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 1 }),
+      }).catch(() => {});
       await bundle.refresh();
     } catch (submitError) {
       onError(submitError instanceof Error ? submitError.message : "Submit failed");
@@ -85,10 +90,10 @@ export function SingleImageTab({ bundle, onError }: Props) {
             onChange={e => setQuality(e.target.value as typeof quality)}
             className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
           >
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
-            <option value="auto">auto</option>
+            <option value="low">{t("qualityOptions.low")}</option>
+            <option value="medium">{t("qualityOptions.medium")}</option>
+            <option value="high">{t("qualityOptions.high")}</option>
+            <option value="auto">{t("qualityOptions.auto")}</option>
           </select>
         </Field>
         <Field label={t("formatLabel")}>

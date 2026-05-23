@@ -14,13 +14,13 @@ import { GalleryTab } from "./tabs/gallery-tab";
 import { PromptKitTab } from "./tabs/prompt-kit-tab";
 
 const TAB_DEFS = [
-  { key: "single", note: "image_single" },
-  { key: "decompose", note: "image_decompose" },
-  { key: "creation", note: "creation" },
-  { key: "article", note: "article" },
-  { key: "ppt", note: "ppt" },
-  { key: "gallery", note: "gallery" },
-  { key: "prompt-kit", note: "prompt-kit" },
+  { key: "single" },
+  { key: "decompose" },
+  { key: "creation" },
+  { key: "article" },
+  { key: "ppt" },
+  { key: "gallery" },
+  { key: "prompt-kit" },
 ] as const;
 
 export type StudioTabKey = (typeof TAB_DEFS)[number]["key"];
@@ -259,7 +259,6 @@ export function StudioShell() {
             aria-pressed={active === tab.key}
           >
             <span className="text-sm font-semibold">{t(TAB_LABEL_KEY[tab.key])}</span>
-            <span className="text-[10px] uppercase tracking-wide opacity-70">{tab.note}</span>
           </button>
         ))}
       </nav>
@@ -321,13 +320,13 @@ export function StudioShell() {
                             : "bg-muted text-muted-foreground",
                         )}
                       >
-                        {task.status}
+                        {t(`status.${task.status}`)}
                       </span>
                     </div>
                     <div className="mt-1 flex items-center justify-between text-card-foreground">
-                      <span>{task.taskType}</span>
+                      <span>{t(`taskTypes.${task.taskType}`)}</span>
                       <span>
-                        {task.creditsFinal || task.creditsReserved} cr
+                        {t("creditsUnit", { n: task.creditsFinal || task.creditsReserved })}
                       </span>
                     </div>
                     {taskAssets.length > 0 && (

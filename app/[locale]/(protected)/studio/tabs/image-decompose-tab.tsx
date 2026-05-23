@@ -26,6 +26,7 @@ async function fileToBase64(file: File): Promise<{ base64: string; mimeType: str
 
 export function ImageDecomposeTab({ bundle, onError }: Props) {
   const t = useTranslations("studio.decompose");
+  const tStatus = useTranslations("studio.shell.status");
   const [file, setFile] = useState<File | null>(null);
   const [depth, setDepth] = useState<"brief" | "detailed">("detailed");
   const [locale, setLocale] = useState("zh");
@@ -50,6 +51,11 @@ export function ImageDecomposeTab({ bundle, onError }: Props) {
         throw new Error(payload.error || `Submit failed (${response.status})`);
       }
       setFile(null);
+      fetch("/api/studio/tasks/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 1 }),
+      }).catch(() => {});
       await bundle.refresh();
     } catch (submitError) {
       onError(submitError instanceof Error ? submitError.message : "Submit failed");
@@ -123,7 +129,7 @@ export function ImageDecomposeTab({ bundle, onError }: Props) {
                 <li key={task.id} className="rounded-xl border border-border/60 bg-card/40 p-3 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-muted-foreground">{task.id.slice(0, 8)}</span>
-                    <span className="text-card-foreground">{task.status}</span>
+                    <span className="text-card-foreground">{tStatus(task.status)}</span>
                   </div>
                   {analysis ? (
                     <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-card-foreground">

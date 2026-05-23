@@ -1036,10 +1036,29 @@
         "refresh": "Refresh",
         "runNow": "Run Now",
         "running": "Running…",
-        "hint": "Local dev runner — submit, then click Run Now to process immediately.",
+        "hint": "Tasks start automatically on submit. Additional submits will queue and chain after the current one completes.",
         "empty": "No tasks yet. Submit one to try it out.",
         "assetLink": "asset"
-      }
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "partial_failed": "Partial fail",
+        "canceled": "Canceled"
+      },
+      "taskTypes": {
+        "image_single": "Single image",
+        "image_decompose": "Decompose",
+        "creation_plan": "Set plan",
+        "creation_generate": "Set generate",
+        "article_plan": "Article plan",
+        "article_generate": "Article generate",
+        "ppt_plan": "PPT plan",
+        "ppt_generate": "PPT generate"
+      },
+      "creditsUnit": "{n} cr"
     },
     "single": {
       "title": "Prompt → Image",
@@ -1049,8 +1068,14 @@
       "sizeLabel": "Resolution",
       "qualityLabel": "Quality",
       "formatLabel": "Format",
-      "submit": "Queue Image Task",
-      "submitting": "Queueing…",
+      "qualityOptions": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "auto": "Auto"
+      },
+      "submit": "Generate Now",
+      "submitting": "Submitting…",
       "errors": {
         "promptRequired": "Prompt is required"
       }

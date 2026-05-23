@@ -718,42 +718,58 @@ async function runTaskByType(task: {
   }
 }
 
+let runnerInFlight = false;
+
 export async function runQueuedStudioTasks(limit = 2) {
-  const claimed = await claimQueuedStudioTasks(limit);
-  if (claimed.length === 0) {
+  if (runnerInFlight) {
     return {
       claimed: 0,
       completed: 0,
       failed: 0,
       taskIds: [] as string[],
+      skipped: "runner_in_flight",
     };
   }
-
-  let completed = 0;
-  let failed = 0;
-
-  for (const task of claimed) {
-    try {
-      await appendStudioTaskEvent(task.id, {
-        eventType: "task_claimed_for_execution",
-        progress: 1,
-      });
-      await runTaskByType(task);
-      completed += 1;
-    } catch (error) {
-      failed += 1;
-      await markStudioTaskFailed({
-        taskId: task.id,
-        errorCode: "runner_error",
-        errorMessage: error instanceof Error ? error.message : "Unknown runner error",
-      });
+  runnerInFlight = true;
+  try {
+    const claimed = await claimQueuedStudioTasks(limit);
+    if (claimed.length === 0) {
+      return {
+        claimed: 0,
+        completed: 0,
+        failed: 0,
+        taskIds: [] as string[],
+      };
     }
-  }
 
-  return {
-    claimed: claimed.length,
-    completed,
-    failed,
-    taskIds: claimed.map(task => task.id),
-  };
+    let completed = 0;
+    let failed = 0;
+
+    for (const task of claimed) {
+      try {
+        await appendStudioTaskEvent(task.id, {
+          eventType: "task_claimed_for_execution",
+          progress: 1,
+        });
+        await runTaskByType(task);
+        completed += 1;
+      } catch (error) {
+        failed += 1;
+        await markStudioTaskFailed({
+          taskId: task.id,
+          errorCode: "runner_error",
+          errorMessage: error instanceof Error ? error.message : "Unknown runner error",
+        });
+      }
+    }
+
+    return {
+      claimed: claimed.length,
+      completed,
+      failed,
+      taskIds: claimed.map(task => task.id),
+    };
+  } finally {
+    runnerInFlight = false;
+  }
 }

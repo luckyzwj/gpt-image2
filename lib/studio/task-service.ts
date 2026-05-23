@@ -37,6 +37,16 @@ export class StudioTaskError extends Error {
   }
 }
 
+function triggerWorkerAsync(limit = 1) {
+  setImmediate(() => {
+    import("@/lib/studio/task-runner")
+      .then(mod => mod.runQueuedStudioTasks(limit))
+      .catch(err => {
+        console.warn("[studio] chain trigger failed", err);
+      });
+  });
+}
+
 export async function appendStudioTaskEvent(taskId: string, { eventType, payload, progress }: StudioTaskEventInput) {
   await db.insert(studioTaskEvent).values({
     id: randomUUID(),
@@ -293,6 +303,8 @@ export async function markStudioTaskCompleted({
     },
     progress: 100,
   });
+
+  triggerWorkerAsync(1);
 }
 
 export async function markStudioTaskFailed({
@@ -336,6 +348,8 @@ export async function markStudioTaskFailed({
     },
     progress: 100,
   });
+
+  triggerWorkerAsync(1);
 }
 
 export async function cancelStudioTaskForUser(taskId: string, userId: string) {
@@ -472,3 +486,5 @@ export async function reapStaleStudioTasks(options: {
     cutoffIso: cutoff.toISOString(),
   };
 }
+
+export { triggerWorkerAsync };
