@@ -22,3 +22,15 @@ jobs:
           echo "HTTP $http_code"
           cat /tmp/body.txt
           test "$http_code" -eq 200
+
+      - name: POST /api/cron/studio-reap (reclaim stale tasks)
+        if: always()
+        run: |
+          set -e
+          http_code=$(curl -sS -o /tmp/reap.txt -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://img.gptimgprompts.com/api/cron/studio-reap?staleAfterMs=300000")
+          echo "HTTP $http_code"
+          cat /tmp/reap.txt
+          test "$http_code" -eq 200

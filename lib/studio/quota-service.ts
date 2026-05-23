@@ -408,7 +408,7 @@ export async function getQuotaUsage(userId: string): Promise<QuotaUsage> {
     .select({
       tasksToday: sql<number>`count(*)`,
       creditsReservedToday: sql<number>`coalesce(sum(${studioTask.creditsReserved}), 0)`,
-      concurrentTasks: sql<number>`count(*) filter (where ${studioTask.status} in ('queued', 'running'))`,
+      concurrentTasks: sql<number>`count(*) filter (where ${studioTask.status} = 'running')`,
     })
     .from(studioTask)
     .where(and(eq(studioTask.userId, userId), gte(studioTask.createdAt, since)));

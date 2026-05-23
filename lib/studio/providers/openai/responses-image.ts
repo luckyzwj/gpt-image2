@@ -127,6 +127,7 @@ export async function generateStudioImage({
       Authorization: `Bearer ${config.apiKey}`,
     },
     body: JSON.stringify(requestBody),
+    signal: AbortSignal.timeout(120_000),
   });
 
   if (!response.ok) {
