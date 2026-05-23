@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/studio/tasks/run?limit=5",
-      "schedule": "*/2 * * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/studio-reap",
-      "schedule": "*/10 * * * *"
+      "schedule": "5 4 * * *"
     },
     {
       "path": "/api/cron/subscription-grants",
-      "schedule": "0 * * * *"
+      "schedule": "10 4 * * *"
     }
   ]
 }
