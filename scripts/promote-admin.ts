@@ -5,34 +5,45 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { sql } from "drizzle-orm";
 
-const PRIMARY_EMAIL = "luckyzwj@qq.com";
-const SECONDARY_EMAIL = "kreegerkorman@gmail.com";
+// Usage:
+//   tsx scripts/promote-admin.ts <email> [--verify]
+//   ENV_FILE=.env.production tsx scripts/promote-admin.ts owner@example.com --verify
+//
+// Promotes the user with the given email to role=admin. If --verify is passed,
+// also marks email_verified=true (useful when the owner has not clicked the
+// magic link yet).
 
 async function main() {
+  const args = process.argv.slice(2);
+  const email = args.find((a) => !a.startsWith("--"));
+  const verify = args.includes("--verify");
+
+  if (!email) {
+    console.error("Usage: tsx scripts/promote-admin.ts <email> [--verify]");
+    process.exit(2);
+  }
+
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL not set");
   const client = postgres(url, { max: 1 });
   const db = drizzle(client);
 
-  // Promote primary to admin + mark email_verified
-  const r1 = await db.execute(sql`
-    UPDATE "user"
-    SET role = 'admin', email_verified = true, updated_at = NOW()
-    WHERE email = ${PRIMARY_EMAIL}
-    RETURNING id, email, role, email_verified
-  `);
-  console.log(`Promoted ${PRIMARY_EMAIL}:`);
-  console.table(r1);
+  const r = verify
+    ? await db.execute(sql`
+        UPDATE "user"
+        SET role = 'admin', email_verified = true, updated_at = NOW()
+        WHERE email = ${email}
+        RETURNING id, email, role, email_verified
+      `)
+    : await db.execute(sql`
+        UPDATE "user"
+        SET role = 'admin', updated_at = NOW()
+        WHERE email = ${email}
+        RETURNING id, email, role, email_verified
+      `);
 
-  // Also promote gmail backup to admin
-  const r2 = await db.execute(sql`
-    UPDATE "user"
-    SET role = 'admin', updated_at = NOW()
-    WHERE email = ${SECONDARY_EMAIL}
-    RETURNING id, email, role, email_verified
-  `);
-  console.log(`Promoted ${SECONDARY_EMAIL}:`);
-  console.table(r2);
+  console.log(`Promoted ${email}:`);
+  console.table(r);
 
   await client.end();
 }

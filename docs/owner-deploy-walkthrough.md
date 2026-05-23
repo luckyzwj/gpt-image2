@@ -152,12 +152,12 @@ STORAGE_BUCKET_NAME=sistine-prod-assets
 
 ## Step 4 — OpenAI / 代理（5 分钟）
 
-你已经有代理（`https://api.17xueai.cn/v1`），只需要：
+如果你已经有 OpenAI 代理（base URL + key），只需要：
 
 **贴给我**（**注意：这两个值都属于密钥范畴，不要贴到 GitHub / 截图 / 公开聊天**）：
 ```
 OPENAI_API_KEY=sk-xxxxxxxx
-OPENAI_BASE_URL=https://api.17xueai.cn/v1
+OPENAI_BASE_URL=https://your-openai-proxy.example.com/v1
 ```
 
 → 我会写入 `.env.production`，跑 preflight 的 `GET /v1/models` 验证 key 有效。日志里 key 只显示末 4 位。
