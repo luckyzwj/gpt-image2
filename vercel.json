@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/studio/tasks/run?limit=5",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/studio-reap",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/subscription-grants",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
