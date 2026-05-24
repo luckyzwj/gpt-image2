@@ -29,6 +29,9 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// gpt-image-2 上游单次生成可能跑到 ~90s,Vercel Hobby Node 函数最大 60s。
+// 设到上限,后续如果还卡建议走 worker 异步队列 + 前端轮询。
+export const maxDuration = 60;
 
 const HOP_BY_HOP = new Set([
   "connection",
