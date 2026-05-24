@@ -203,3 +203,36 @@ export const newsletterSubscription = pgTable("newsletter_subscription", {
 // 用户隔离通过 X-Client-Session-Id (= user.id) 在网关注入。
 // 任务、资产、配额、定价、BYOK 都由 Worker 端管理,Vercel 这边只保留计费与认证。
 // drop migration: drizzle/<timestamp>_drop_studio_tables.sql
+
+// Studio 系统级 API 配置 — admin 在后台配的平台 OPENAI_API_KEY/baseUrl,sistine 反代
+// 在转发请求到 aEboli worker 前注入到 FormData,用户层面不再需要自带 key。
+// singleton 行:主键固定为 "default"。apiKey 走 AES-256-GCM 加密,密文存 base64。
+export const studioSystemConfig = pgTable("studio_system_config", {
+  id: text("id").primaryKey().default("default"),
+  apiKeyCiphertext: text("api_key_ciphertext"),
+  apiKeyHint: varchar("api_key_hint", { length: 32 }),
+  baseUrl: text("base_url")
+    .notNull()
+    .default("https://api.openai.com/v1"),
+  responsesModel: text("responses_model").notNull().default("gpt-5.4"),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Studio 可用图像模型清单 — admin 通过 /v1/models 拉取后勾选启用,反代把启用列表
+// 作为 /api/enabled-models 给 aEboli 前端的模型下拉用。
+export const studioModelPreset = pgTable("studio_model_preset", {
+  id: text("id").primaryKey(),
+  modelId: varchar("model_id", { length: 128 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 128 }).notNull(),
+  enabled: boolean("enabled").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  source: varchar("source", { length: 32 }).notNull().default("manual"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});

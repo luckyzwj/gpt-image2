@@ -99,13 +99,77 @@ async function checkDb() {
     const rows = (tablesResult as unknown as { rows?: Array<{ table_name: string }> }).rows
       || (tablesResult as unknown as Array<{ table_name: string }>);
     const tableNames = Array.isArray(rows) ? rows.map(r => r.table_name) : [];
-    if (tableNames.length < 6) {
-      record("db.studio-tables", "fail", true, `found ${tableNames.length} studio_* tables (expected ≥6) — did you run db:push/db:migrate?`);
+    const required = ["studio_system_config", "studio_model_preset"];
+    const missing = required.filter((t) => !tableNames.includes(t));
+    if (missing.length > 0) {
+      record("db.studio-tables", "fail", true, `missing tables: ${missing.join(", ")} — did you run pnpm db:push?`);
     } else {
-      record("db.studio-tables", "pass", true, `${tableNames.length} studio_* tables present`);
+      record("db.studio-tables", "pass", true, `${required.length}/${required.length} required studio_* tables present (found ${tableNames.length} total)`);
     }
   } catch (err) {
     record("db.connect", "fail", true, `connection failed: ${(err as Error).message}`);
+  }
+}
+
+async function checkStudioSystemConfig() {
+  if (!process.env.DATABASE_URL) {
+    return; // already failed in checkDb
+  }
+  try {
+    const { db } = await import("../lib/db");
+    const { studioSystemConfig, studioModelPreset } = await import("../lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const rows = await db
+      .select()
+      .from(studioSystemConfig)
+      .where(eq(studioSystemConfig.id, "default"))
+      .limit(1);
+    const row = rows[0];
+    if (!row) {
+      record(
+        "studio.system-config",
+        "fail",
+        true,
+        "studio_system_config 还没有 default 行 — 管理员先到 /admin/studio-openai-config 填一次 OPENAI_API_KEY",
+      );
+      return;
+    }
+    if (!row.apiKeyCiphertext) {
+      record(
+        "studio.system-config",
+        "fail",
+        true,
+        "studio_system_config.default 存在但 apiKey 为空 — 管理员到 /admin/studio-openai-config 填写",
+      );
+    } else {
+      record(
+        "studio.system-config",
+        "pass",
+        true,
+        `apiKey ${row.apiKeyHint || "(no hint)"} baseUrl=${row.baseUrl}`,
+      );
+    }
+    const enabled = await db
+      .select()
+      .from(studioModelPreset)
+      .where(eq(studioModelPreset.enabled, true));
+    if (enabled.length === 0) {
+      record(
+        "studio.enabled-models",
+        "warn",
+        false,
+        "studio_model_preset 没有 enabled 模型 — 反代会兜底 gpt-image-2,建议管理员明确勾选",
+      );
+    } else {
+      record(
+        "studio.enabled-models",
+        "pass",
+        false,
+        `${enabled.length} 个模型已启用: ${enabled.map((m) => m.modelId).slice(0, 5).join(", ")}`,
+      );
+    }
+  } catch (err) {
+    record("studio.system-config", "fail", true, `读取失败: ${(err as Error).message}`);
   }
 }
 
@@ -299,20 +363,8 @@ function checkCron() {
 }
 
 function checkByoKey() {
-  const explicit = process.env.BYO_KEY_MASTER_KEY;
-  const fallback = process.env.STUDIO_BYO_KEY_SECRET || process.env.BETTER_AUTH_SECRET;
-  if (explicit) {
-    record("byo-key.master-key", "pass", false, `BYO_KEY_MASTER_KEY set, ${hint(explicit)}`);
-  } else if (fallback) {
-    record(
-      "byo-key.master-key",
-      "warn",
-      false,
-      "BYO_KEY_MASTER_KEY unset — falling back to BETTER_AUTH_SECRET; rotating auth secret will brick stored BYO keys",
-    );
-  } else {
-    record("byo-key.master-key", "fail", false, "no master key and no fallback — BYO key encryption will throw at runtime");
-  }
+  // BYO key 模式已在 SaaS 化中移除;保留这个函数只是为了不打断 main() 的调用序。
+  record("byo-key.master-key", "skip", false, "BYO key 模式已废弃;统一通过管理员后台的系统 OPENAI_API_KEY 接入");
 }
 
 async function main() {
@@ -322,6 +374,7 @@ async function main() {
 
   await checkAuth();
   await checkDb();
+  await checkStudioSystemConfig();
   await checkStorage();
   await checkOpenAI();
   await checkResend();

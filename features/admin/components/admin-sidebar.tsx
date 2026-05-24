@@ -8,11 +8,7 @@ import {
   Home,
   ShoppingCart,
   Database,
-  Workflow,
-  Image,
-  BarChart3,
-  Wallet,
-  Gauge,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,29 +34,9 @@ const adminNavItems = [
     icon: Database,
   },
   {
-    title: "studioTasks",
-    href: "/admin/studio-tasks",
-    icon: Workflow,
-  },
-  {
-    title: "studioAssets",
-    href: "/admin/studio-assets",
-    icon: Image,
-  },
-  {
-    title: "studioUsage",
-    href: "/admin/studio-usage",
-    icon: BarChart3,
-  },
-  {
-    title: "studioPricing",
-    href: "/admin/studio-pricing",
-    icon: Wallet,
-  },
-  {
-    title: "studioTiers",
-    href: "/admin/studio-tiers",
-    icon: Gauge,
+    title: "studioOpenaiConfig",
+    href: "/admin/studio-openai-config",
+    icon: Settings,
   },
 ];
 

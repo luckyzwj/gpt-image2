@@ -564,11 +564,7 @@
       "subscriptions": "订阅管理",
       "credits": "积分管理",
       "backToDashboard": "返回用户面板",
-      "studioTasks": "Studio Tasks",
-      "studioAssets": "Studio Assets",
-      "studioUsage": "Studio Usage",
-      "studioPricing": "Studio 定价",
-      "studioTiers": "Studio 等级与配额"
+      "studioOpenaiConfig": "Studio API 配置"
     },
     "header": {
       "welcome": "欢迎",
@@ -709,6 +705,44 @@
         "next": "下一页",
         "page": "第 {{current}} / {{total}} 页"
       }
+    },
+    "studioOpenaiConfig": {
+      "title": "Studio API 配置",
+      "subtitle": "在此设置 SaaS 平台统一调用 OpenAI 兼容服务时使用的 API Key、Base URL 与默认模型;Studio 的所有生图请求会在网关层注入这套凭据,用户无需自带 Key。",
+      "credentialsTitle": "API 凭据",
+      "credentialsHelp": "API Key 加密保存在数据库,Base URL 用于转发,Responses 模型是 Studio 推理调用的默认值。",
+      "baseUrlLabel": "Base URL",
+      "apiKeyLabel": "API Key",
+      "apiKeyHelp": "留空表示不修改;填入新值会覆盖现有 Key 并立即生效(30 秒内缓存自动失效)。",
+      "apiKeyPlaceholderEmpty": "尚未配置,请填入 OpenAI 兼容 API Key",
+      "apiKeyPlaceholderExisting": "当前已配置: {hint},留空保持不变",
+      "responsesModelLabel": "Responses 模型(管理员默认)",
+      "responsesModelHelp": "驱动 prompt 理解的模型,例如 gpt-5.4。用户无感知,只影响 aEboli 工作流推理。",
+      "save": "保存凭据",
+      "saveOk": "凭据已保存。30 秒内反代将自动使用新值。",
+      "saveError": "保存失败: {message}",
+      "discoverTitle": "从 API 拉取可用模型",
+      "discoverHelp": "调用 /v1/models 拉取上游所有模型 ID,从中挑选要在 Studio 暴露给用户的图像生成模型。",
+      "discoverNeedsKey": "请先保存 API Key,才能调用 /v1/models。",
+      "discover": "拉取模型列表",
+      "discovering": "拉取中…",
+      "discoverOk": "拉取成功,共 {count} 个模型。",
+      "discoverError": "拉取失败: {message}",
+      "presetsTitle": "可用模型(用户生图下拉)",
+      "presetsHelp": "勾选 enabled 的模型会出现在用户的图像生成下拉中,sortOrder 控制顺序。displayName 会显示给用户。",
+      "presetsEmpty": "尚未添加任何模型。点上方\"拉取模型列表\"或下方\"手动添加\"创建一行。",
+      "addManual": "手动添加",
+      "addToCandidates": "添加到候选",
+      "alreadyAdded": "已添加",
+      "colEnabled": "启用",
+      "colModelId": "模型 ID",
+      "colDisplayName": "显示名",
+      "colSortOrder": "排序",
+      "colAction": "操作",
+      "delete": "删除",
+      "savePresets": "保存可用模型",
+      "presetsSaveOk": "可用模型已保存,共 {count} 个启用。",
+      "presetsSaveError": "保存失败: {message}"
     }
   },
   "dashboard": {
