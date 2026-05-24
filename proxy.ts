@@ -10,6 +10,7 @@ export const proxy = createMiddleware({
 export const config = {
   matcher: [
     '/',
-    '/((?!api|_next|_vercel|.*\\..*).*)'
+    // exclude: api/* (own routes), studio/* (reverse-proxied to aEboli), _next, _vercel, static files
+    '/((?!api|studio|_next|_vercel|.*\\..*).*)'
   ]
 };

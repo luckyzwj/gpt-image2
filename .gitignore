@@ -70,3 +70,11 @@ public/fumadocs-style.css
 
 # scripts
 /scripts/manage-users.ts
+
+# deploy secrets (do not commit)
+.deploy-secrets
+
+# one-shot deploy helpers (not part of source)
+/apply-0010-only.mjs
+/scripts/_clean-cache.mjs
+/scripts/_cleanup-scripts.mjs

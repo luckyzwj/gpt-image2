@@ -87,60 +87,7 @@ export interface VideoStatusResponsePayload {
   message?: string;
 }
 
-export type StudioTaskStatus =
-  | "queued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "canceled"
-  | "partial_failed";
-
-export type StudioTaskType =
-  | "image_single"
-  | "image_decompose"
-  | "creation_plan"
-  | "creation_generate"
-  | "article_plan"
-  | "article_generate"
-  | "ppt_plan"
-  | "ppt_generate";
-
-export interface StudioTaskSummary {
-  id: string;
-  userId: string;
-  taskType: StudioTaskType;
-  status: StudioTaskStatus;
-  creditsReserved: number;
-  creditsFinal: number;
-  creditsRefunded: number;
-  errorMessage: string | null;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  completedAt: string | Date | null;
-  request: Record<string, unknown>;
-  result: Record<string, unknown>;
-}
-
-export interface StudioTaskEvent {
-  id: string;
-  taskId: string;
-  eventType: string;
-  progress: number | null;
-  createdAt: string | Date;
-  payload: Record<string, unknown>;
-}
-
-export interface StudioAsset {
-  id: string;
-  taskId: string | null;
-  userId: string;
-  assetType: "image" | "video" | "pptx" | "reference";
-  publicUrl: string;
-  storageKey: string | null;
-  mimeType: string | null;
-  createdAt: string | Date;
-  metadata: Record<string, unknown>;
-}
+// Studio 类型已下沉到 Cloudflare Pages Worker (aEboli),前端通过反代访问 /studio/api/*。
 
 type ReferenceUploadResponse = {
   assets: Array<{

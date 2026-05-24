@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSessionUser } from "@/lib/auth/session";
 import { getErrorMessage } from "@/lib/error-utils";
 import { getStorage } from "@/lib/storage";
-import { createStudioAsset, listStudioAssetsForUser } from "@/lib/studio/asset-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +45,6 @@ function getImageDimensions(buffer: Buffer, mime: string): { width: number; heig
 
 type UploadResultItem = {
   ok: true;
-  assetId: string;
   publicUrl: string;
   storageKey: string;
   mimeType: string;
@@ -114,22 +112,8 @@ export async function POST(req: NextRequest) {
           format,
         });
 
-        const assetId = await createStudioAsset({
-          taskId: null,
-          userId: access.user.id,
-          assetType: "reference",
-          publicUrl: uploaded.publicUrl,
-          storageKey: uploaded.storageKey,
-          mimeType: uploaded.mimeType,
-          width: dims?.width ?? null,
-          height: dims?.height ?? null,
-          sizeBytes: uploaded.sizeBytes,
-          metadata: { originalFilename: file.name },
-        });
-
         results.push({
           ok: true,
-          assetId,
           publicUrl: uploaded.publicUrl,
           storageKey: uploaded.storageKey,
           mimeType: uploaded.mimeType,
@@ -151,7 +135,6 @@ export async function POST(req: NextRequest) {
     const failed = results.filter((r): r is Extract<UploadResultItem, { ok: false }> => !r.ok);
 
     return NextResponse.json({
-      assetIds: succeeded.map(r => r.assetId),
       assets: succeeded.map(({ ok: _ok, ...rest }) => rest),
       errors: failed,
       succeededCount: succeeded.length,
@@ -165,23 +148,5 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    const access = await getActiveSessionUser(req.headers);
-    if (!access.ok) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
-    }
-    const limit = Number.parseInt(req.nextUrl.searchParams.get("limit") || "40", 10);
-    const assets = await listStudioAssetsForUser({
-      userId: access.user.id,
-      type: "reference",
-      limit,
-    });
-    return NextResponse.json({ assets });
-  } catch (error) {
-    return NextResponse.json(
-      { error: getErrorMessage(error, "Failed to list reference assets") },
-      { status: 500 },
-    );
-  }
-}
+// GET removed — Studio gallery now lives in Cloudflare Pages Worker (aEboli).
+// Demo pages only need POST.

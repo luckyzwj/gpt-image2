@@ -1,0 +1,34 @@
+// Studio gateway billing — credit cost table per aEboli route.
+//
+// Why a hard-coded table here instead of "ask aEboli for the price":
+//   aEboli is stateless about billing; sistine owns credits. We need to know
+//   the cost BEFORE we proxy so we can refuse on insufficient balance. If
+//   aEboli adds a new billable route, add it here.
+
+export type StudioCostKey = {
+  method: string;
+  pathname: string; // exact match after /studio is stripped
+};
+
+// Costs are in credits. Keep these in sync with the user-facing pricing page.
+const COST_TABLE: Array<{ method: string; match: (p: string) => boolean; cost: number; reason: string }> = [
+  { method: "POST", match: (p) => p === "/api/image/generate",        cost: 20, reason: "studio_image_generate" },
+  { method: "POST", match: (p) => p === "/api/image/decompose",       cost: 15, reason: "studio_image_decompose" },
+  { method: "POST", match: (p) => p === "/api/ppt/generate",          cost: 80, reason: "studio_ppt_generate" },
+  { method: "POST", match: (p) => p === "/api/ppt/complete",          cost: 80, reason: "studio_ppt_complete" },
+  { method: "POST", match: (p) => p === "/api/ppt/slide/edit",        cost: 10, reason: "studio_ppt_slide_edit" },
+  { method: "POST", match: (p) => p === "/api/creation/generate",     cost: 50, reason: "studio_creation_generate" },
+  { method: "POST", match: (p) => p === "/api/portrait/generate",     cost: 30, reason: "studio_portrait_generate" },
+  { method: "POST", match: (p) => p === "/api/article/generate",      cost: 40, reason: "studio_article_generate" },
+  { method: "POST", match: (p) => p === "/api/prompt-agent/analyze",  cost: 5,  reason: "studio_prompt_analyze" },
+];
+
+export type StudioBillable = {
+  cost: number;
+  reason: string;
+};
+
+export function studioBillableFor(method: string, pathname: string): StudioBillable | null {
+  const entry = COST_TABLE.find((e) => e.method === method && e.match(pathname));
+  return entry ? { cost: entry.cost, reason: entry.reason } : null;
+}
