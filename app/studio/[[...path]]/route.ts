@@ -32,6 +32,11 @@ const HOP_BY_HOP = new Set([
   "upgrade",
   "host",
   "content-length",
+  // Node's fetch transparently decompresses the upstream body, so we end up
+  // streaming plaintext bytes. Forwarding the upstream Content-Encoding makes
+  // the browser (and any CDN in front) try to decode plaintext as zstd/gzip
+  // and silently drop CSS/JS or fail HTML with ERR_CONTENT_DECODING_FAILED.
+  "content-encoding",
 ]);
 
 function originUrl(): URL {
@@ -168,6 +173,12 @@ async function proxy(req: NextRequest): Promise<Response> {
     if (HOP_BY_HOP.has(k.toLowerCase())) continue;
     outHeaders.set(k, v);
   }
+  // Studio responses are per-session (HMAC-signed for one userId). They must
+  // not be cached by any intermediate CDN — particularly the Cloudflare layer
+  // in front of img.gptimgprompts.com, which otherwise pins a single user's
+  // response and serves it to everyone.
+  outHeaders.set("cache-control", "private, no-store");
+  outHeaders.delete("etag");
 
   // aEboli was built assuming it lives at the root of its origin. When we mount it under
   // /studio/* via this reverse proxy, three classes of references break:
@@ -199,15 +210,6 @@ async function proxy(req: NextRequest): Promise<Response> {
       /<head(\s[^>]*)?>/i,
       (match) => `${match}${headInjection}`,
     );
-    // upstreamRes.text() already decompressed the body. We must drop the
-    // Content-Encoding / Content-Length / ETag headers, otherwise the browser
-    // (or Cloudflare in front of Vercel) tries to re-decode plaintext as zstd
-    // and fails with ERR_CONTENT_DECODING_FAILED. Also force no-store so the
-    // edge cache doesn't pin a broken response.
-    outHeaders.delete("content-encoding");
-    outHeaders.delete("content-length");
-    outHeaders.delete("etag");
-    outHeaders.set("cache-control", "no-store");
     return new Response(patched, {
       status: upstreamRes.status,
       statusText: upstreamRes.statusText,
