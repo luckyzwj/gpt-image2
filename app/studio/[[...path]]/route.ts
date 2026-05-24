@@ -199,7 +199,15 @@ async function proxy(req: NextRequest): Promise<Response> {
       /<head(\s[^>]*)?>/i,
       (match) => `${match}${headInjection}`,
     );
+    // upstreamRes.text() already decompressed the body. We must drop the
+    // Content-Encoding / Content-Length / ETag headers, otherwise the browser
+    // (or Cloudflare in front of Vercel) tries to re-decode plaintext as zstd
+    // and fails with ERR_CONTENT_DECODING_FAILED. Also force no-store so the
+    // edge cache doesn't pin a broken response.
+    outHeaders.delete("content-encoding");
     outHeaders.delete("content-length");
+    outHeaders.delete("etag");
+    outHeaders.set("cache-control", "no-store");
     return new Response(patched, {
       status: upstreamRes.status,
       statusText: upstreamRes.statusText,
