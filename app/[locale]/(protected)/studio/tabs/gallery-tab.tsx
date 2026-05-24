@@ -80,7 +80,7 @@ export function GalleryTab({ bundle }: Props) {
                 </div>
               )}
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-2 py-1 text-[10px] text-white opacity-0 transition group-hover:opacity-100">
-                <span className="font-mono">{asset.taskId.slice(0, 6)}</span>
+                <span className="font-mono">{asset.taskId ? asset.taskId.slice(0, 6) : "—"}</span>
                 <span>{new Date(asset.createdAt).toLocaleDateString()}</span>
               </div>
             </button>
@@ -101,7 +101,7 @@ export function GalleryTab({ bundle }: Props) {
               <div className="text-xs text-muted-foreground">
                 <div className="font-mono">{selected.id}</div>
                 <div className="mt-0.5">
-                  task <span className="font-mono">{selected.taskId.slice(0, 8)}</span> ·{" "}
+                  task <span className="font-mono">{selected.taskId ? selected.taskId.slice(0, 8) : "—"}</span> ·{" "}
                   {new Date(selected.createdAt).toLocaleString()}
                 </div>
               </div>

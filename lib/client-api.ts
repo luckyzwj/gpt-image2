@@ -132,7 +132,7 @@ export interface StudioTaskEvent {
 
 export interface StudioAsset {
   id: string;
-  taskId: string;
+  taskId: string | null;
   userId: string;
   assetType: "image" | "video" | "pptx" | "reference";
   publicUrl: string;
