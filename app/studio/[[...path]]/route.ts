@@ -169,18 +169,35 @@ async function proxy(req: NextRequest): Promise<Response> {
     outHeaders.set(k, v);
   }
 
-  // The aEboli HTML uses relative URLs (e.g. <link href="./styles.css">). When the
-  // browser is at /studio (no trailing slash, due to Next's trailingSlash:false 308),
-  // those relative URLs resolve against the parent dir → /styles.css → 404.
-  // Inject <base href="/studio/"> right after <head> so the browser rebases all
-  // relative URLs onto /studio/. Streaming bodies skip this on purpose; HTML pages
-  // are typically buffered and small.
+  // aEboli was built assuming it lives at the root of its origin. When we mount it under
+  // /studio/* via this reverse proxy, three classes of references break:
+  //
+  //   1. HTML relative URLs   — `<link href="./styles.css">`, `<img src="./assets/...">`
+  //      Fixed by injecting `<base href="/studio/">` so the browser rebases onto /studio/.
+  //
+  //   2. ES module static imports — `import x from "/lib/foo.mjs"` (absolute path)
+  //      base href does NOT influence module specifier resolution, so we inject an
+  //      <script type="importmap"> that prefix-maps "/lib/" → "/studio/lib/".
+  //
+  //   3. fetch("/api/...") calls — runtime API calls written with absolute paths
+  //      base href and import maps don't affect fetch(). We inject an inline script
+  //      that monkey-patches window.fetch to prepend /studio to /api/* URLs.
+  //
+  // The importmap MUST appear before any module script, and the fetch patch MUST
+  // run before app.js executes — both are guaranteed by injecting them inside <head>
+  // (classic inline scripts execute synchronously during parsing, before any
+  // deferred / module script).
   const contentType = upstreamRes.headers.get("content-type") ?? "";
   if (contentType.includes("text/html") && upstreamRes.body) {
     const html = await upstreamRes.text();
+    const headInjection = [
+      `<base href="/studio/">`,
+      `<script type="importmap">${JSON.stringify({ imports: { "/lib/": "/studio/lib/" } })}</script>`,
+      `<script>(function(){var o=window.fetch.bind(window);window.fetch=function(i,n){try{if(typeof i==="string"&&i.charAt(0)==="/"&&i.indexOf("/api/")===0)i="/studio"+i;else if(i&&typeof i==="object"&&i.url){var u=new URL(i.url,location.origin);if(u.pathname.indexOf("/api/")===0){u.pathname="/studio"+u.pathname;i=new Request(u.toString(),i);}}}catch(e){}return o(i,n);};})();</script>`,
+    ].join("");
     const patched = html.replace(
       /<head(\s[^>]*)?>/i,
-      (match) => `${match}<base href="/studio/">`,
+      (match) => `${match}${headInjection}`,
     );
     outHeaders.delete("content-length");
     return new Response(patched, {
