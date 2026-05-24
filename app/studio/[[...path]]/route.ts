@@ -169,6 +169,27 @@ async function proxy(req: NextRequest): Promise<Response> {
     outHeaders.set(k, v);
   }
 
+  // The aEboli HTML uses relative URLs (e.g. <link href="./styles.css">). When the
+  // browser is at /studio (no trailing slash, due to Next's trailingSlash:false 308),
+  // those relative URLs resolve against the parent dir → /styles.css → 404.
+  // Inject <base href="/studio/"> right after <head> so the browser rebases all
+  // relative URLs onto /studio/. Streaming bodies skip this on purpose; HTML pages
+  // are typically buffered and small.
+  const contentType = upstreamRes.headers.get("content-type") ?? "";
+  if (contentType.includes("text/html") && upstreamRes.body) {
+    const html = await upstreamRes.text();
+    const patched = html.replace(
+      /<head(\s[^>]*)?>/i,
+      (match) => `${match}<base href="/studio/">`,
+    );
+    outHeaders.delete("content-length");
+    return new Response(patched, {
+      status: upstreamRes.status,
+      statusText: upstreamRes.statusText,
+      headers: outHeaders,
+    });
+  }
+
   return new Response(upstreamRes.body, {
     status: upstreamRes.status,
     statusText: upstreamRes.statusText,
